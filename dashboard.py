@@ -3,7 +3,8 @@ import pandas as pd
 from utils.data_loader import load_campaign_data, load_business_data, merge_campaign_business_data
 from utils.chart_functions import (create_revenue_by_platform_chart, create_efficiency_trends_chart, 
                                   create_roas_comparison_chart, create_cac_clv_scatter_chart, 
-                                  create_gross_profit_waterfall_chart)
+                                  create_gross_profit_waterfall_chart, create_campaign_tactic_heatmap,
+                                  create_conversion_funnel_chart)
 import config
 
 # Page configuration
@@ -364,7 +365,72 @@ def main():
             ">
                 <span style="color: #1565C0; font-size: 14px;">
                 📈 <strong>Shows true profitability after COGS and ad spend</strong><br>
-                <strong>Green</strong> = Profit | <strong>Red</strong> = Loss
+                <strong>Different colors</strong> per platform
+                </span>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # Add some spacing
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # NEW: Campaign Tactic Heatmap and Conversion Funnel Charts Section
+    st.markdown('<div class="section-header">Campaign Performance Analysis</div>', unsafe_allow_html=True)
+    
+    # Two new charts: Tactic Heatmap (45%) and Conversion Funnel (55%) with partition
+    tactic_col, funnel_col = st.columns([0.45, 0.55], gap="small")
+    
+    with tactic_col:
+        st.markdown('<div class="chart-partition">', unsafe_allow_html=True)
+        st.subheader("🎯 Campaign Tactic Analysis")
+        
+        # Display Campaign Tactic Heatmap
+        tactic_chart = create_campaign_tactic_heatmap(merged_df)
+        if tactic_chart:
+            st.plotly_chart(tactic_chart, use_container_width=True)
+            
+            # Add instruction for tactic heatmap
+            st.markdown("""
+            <div style="
+                background-color: #FFF3E0;
+                border: 2px solid #FF9800;
+                border-radius: 15px;
+                padding: 12px;
+                margin: 10px 0;
+                text-align: center;
+            ">
+                <span style="color: #E65100; font-size: 14px;">
+                🎯 <strong>Green = Best Performance | Red = Needs Improvement</strong><br>
+                <strong>Identify</strong> top tactic-platform combinations
+                </span>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with funnel_col:
+        st.markdown('<div class="chart-section">', unsafe_allow_html=True)
+        st.subheader("📈 Conversion Funnel Analysis")
+        
+        # Display Conversion Funnel chart
+        funnel_chart = create_conversion_funnel_chart(merged_df)
+        if funnel_chart:
+            st.plotly_chart(funnel_chart, use_container_width=True)
+            
+            # Add instruction for funnel chart
+            st.markdown("""
+            <div style="
+                background-color: #E8F5E8;
+                border: 2px solid #4CAF50;
+                border-radius: 15px;
+                padding: 12px;
+                margin: 10px 0;
+                text-align: center;
+            ">
+                <span style="color: #2E7D32; font-size: 14px;">
+                📊 <strong>Impressions → Clicks → Orders → Revenue</strong><br>
+                <strong>Identify</strong> conversion bottlenecks per platform
                 </span>
             </div>
             """, unsafe_allow_html=True)

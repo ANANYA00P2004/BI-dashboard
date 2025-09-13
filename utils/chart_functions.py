@@ -4,7 +4,7 @@ from plotly.subplots import make_subplots
 import config
 
 def create_campaign_tactic_heatmap(merged_df):
-    """Create Campaign Tactic Effectiveness Matrix Heatmap"""
+    """Create Campaign Tactic Effectiveness Matrix Heatmap - COMPLETELY FIXED"""
     from utils.data_loader import get_campaign_tactic_heatmap_data
     
     heatmap_data = get_campaign_tactic_heatmap_data(merged_df)
@@ -15,24 +15,26 @@ def create_campaign_tactic_heatmap(merged_df):
     # Create pivot table for heatmap
     heatmap_pivot = heatmap_data.pivot(index='Platform', columns='Campaign Tactic', values='Performance Score')
     
-    fig = px.imshow(
-        heatmap_pivot,
-        title='Campaign Tactic Effectiveness Matrix',
-        color_continuous_scale='RdYlGn',
-        aspect='auto',
-        text_auto=True
-    )
-    
-    # Customize the heatmap
-    fig.update_traces(
-        texttemplate='%{z:.0f}',
-        textfont=dict(size=11, color='black'),
+    # FIXED: Use go.Heatmap with corrected colorbar configuration
+    fig = go.Figure(data=go.Heatmap(
+        z=heatmap_pivot.values,
+        x=heatmap_pivot.columns,
+        y=heatmap_pivot.index,
+        colorscale='RdYlGn',
+        text=heatmap_pivot.values,
+        texttemplate="%{text:.0f}",
+        textfont={"size": 11, "color": "black"},
         hovertemplate='<b>%{y}</b> on <b>%{x}</b><br>' +
                      'Performance Score: <b>%{z:.0f}/100</b><br>' +
-                     '<i>💡 Higher score = Better performance</i><extra></extra>'
-    )
+                     '<i>Higher score = Better performance</i><extra></extra>',
+        colorbar=dict(
+            title=dict(text="Performance<br>Score", font=dict(size=10)),  # FIXED: Proper title structure
+            tickfont=dict(size=9)  # FIXED: Keep tickfont for colorbar (this is correct)
+        )
+    ))
     
     fig.update_layout(
+        title='Campaign Tactic Effectiveness Matrix',
         title_x=0.5,
         height=400,
         xaxis_title="Campaign Tactics",
@@ -43,11 +45,6 @@ def create_campaign_tactic_heatmap(merged_df):
         ),
         yaxis=dict(
             tickfont=dict(size=10)
-        ),
-        coloraxis_colorbar=dict(
-            title="Performance<br>Score",
-            titlefont=dict(size=10),
-            tickfont=dict(size=9)
         )
     )
     
@@ -107,7 +104,7 @@ def create_conversion_funnel_chart(merged_df):
             hovertemplate='<b>%{fullData.name}</b><br>' +
                          '%{label}<br>' +
                          'Value: %{value}<br>' +
-                         '<i>💡 Conversion funnel stage</i><extra></extra>',
+                         '<i>Conversion funnel stage</i><extra></extra>',
             orientation='v'
         ))
     
@@ -155,7 +152,7 @@ def create_cac_clv_scatter_chart(merged_df):
                      'CAC: <b>$%{x:.2f}</b><br>' +
                      'Estimated CLV: <b>$%{y:.2f}</b><br>' +
                      'New Customers: <b>%{customdata:,.0f}</b><br>' +
-                     '<i>💡 CLV should be 3x+ higher than CAC</i><extra></extra>',
+                     '<i>CLV should be 3x+ higher than CAC</i><extra></extra>',
         customdata=cac_clv_data['new_customers']
     )
     
@@ -248,7 +245,7 @@ def create_gross_profit_waterfall_chart(merged_df):
                 showlegend=False,
                 hovertemplate='<b>%{x}</b><br>' +
                              'Profit Contribution: <b>$%{y:,.0f}</b><br>' +
-                             '<i>💡 After COGS and Ad Spend</i><extra></extra>'
+                             '<i>After COGS and Ad Spend</i><extra></extra>'
             ))
         else:
             # Total bar
@@ -315,7 +312,7 @@ def create_roas_comparison_chart(merged_df):
                      'ROAS: <b>%{x:.2f}x</b><br>' +
                      'Revenue: <b>$%{customdata[0]:,.0f}</b><br>' +
                      'Total Spend: <b>$%{customdata[1]:,.0f}</b><br>' +
-                     '<i>💡 Higher ROAS = More Profitable</i><extra></extra>',
+                     '<i>Higher ROAS = More Profitable</i><extra></extra>',
         customdata=list(zip(roas_data['total_revenue'], roas_data['total_spend']))
     )
     
@@ -396,7 +393,7 @@ def create_efficiency_trends_chart(merged_df):
                 '<b>%{fullData.name}</b><br>' +
                 'Week of: %{x}<br>' +
                 'Cost per Click: $%{y:.2f}<br>' +
-                f'<i>💡 {platform} Weekly CPC Trend</i><extra></extra>',
+                f'<i>{platform} Weekly CPC Trend</i><extra></extra>',
                 legendgroup=f'{platform}_CPC',
                 showlegend=True
             )
@@ -421,7 +418,7 @@ def create_efficiency_trends_chart(merged_df):
                 '<b>%{fullData.name}</b><br>' +
                 'Week of: %{x}<br>' +
                 'Cost per Acquisition: $%{y:.2f}<br>' +
-                f'<i>💡 {platform} Weekly CPA Trend</i><extra></extra>',
+                f'<i>{platform} Weekly CPA Trend</i><extra></extra>',
                 legendgroup=f'{platform}_CPA',
                 showlegend=True
             )
@@ -502,7 +499,7 @@ def create_revenue_by_platform_chart(merged_df):
         hovertemplate='<b>%{x} Platform</b><br>' +
                      'Revenue: <b>$%{y:,.0f}</b><br>' +
                      'Share: <b>%{customdata:.1f}%</b><br>' +
-                     '<i>💡 Hover to compare performance</i><extra></extra>',
+                     '<i>Hover to compare performance</i><extra></extra>',
         customdata=platform_revenue['percentage']
     )
     

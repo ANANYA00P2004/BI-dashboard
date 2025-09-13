@@ -255,7 +255,7 @@ def get_conversion_funnel_data(merged_df):
         st.error(f"Error calculating funnel data: {e}")
         return None
 
-# NEW: Customer Acquisition Cost vs Customer Lifetime Value
+# Customer Acquisition Cost vs Customer Lifetime Value
 def get_cac_clv_data(merged_df):
     """Calculate CAC vs CLV data for scatter plot"""
     try:
@@ -288,7 +288,7 @@ def get_cac_clv_data(merged_df):
         st.error(f"Error calculating CAC/CLV data: {e}")
         return None
 
-# NEW: Gross Profit Attribution by Platform
+# Gross Profit Attribution by Platform
 def get_gross_profit_attribution_data(merged_df):
     """Calculate gross profit attribution for waterfall chart"""
     try:
