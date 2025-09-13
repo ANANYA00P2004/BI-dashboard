@@ -1,7 +1,9 @@
 import streamlit as st
 import pandas as pd
 from utils.data_loader import load_campaign_data, load_business_data, merge_campaign_business_data
-from utils.chart_functions import create_revenue_by_platform_chart, create_efficiency_trends_chart
+from utils.chart_functions import (create_revenue_by_platform_chart, create_efficiency_trends_chart, 
+                                  create_roas_comparison_chart, create_cac_clv_scatter_chart, 
+                                  create_gross_profit_waterfall_chart)
 import config
 
 # Page configuration
@@ -11,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Clean CSS for KPI cards + Hover effect for chart section
+# Clean CSS for KPI cards + Hover effect for chart section + Partition line
 st.markdown("""
 <style>
     .dashboard-title {
@@ -90,6 +92,18 @@ st.markdown("""
     .chart-container:hover .hover-insight {
         opacity: 1;
     }
+    
+    /* Blue partition line between charts */
+    .chart-partition {
+        border-right: 4px solid #1565C0;
+        padding-right: 15px;
+        margin-right: 10px;
+    }
+    
+    .chart-section {
+        padding-left: 15px;
+        margin-left: 10px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -154,42 +168,96 @@ def main():
             value=f"{overall_roas:.2f}x"
         )
     
-    # Chart Section - Revenue chart on top, Efficiency chart below (50% width each)
+    # Chart Section - Two charts side by side with blue partition line
     st.markdown('<div class="section-header">Platform Performance Analysis</div>', unsafe_allow_html=True)
     
-    # Revenue Chart - Full width on top
-    st.subheader("📊 Revenue by Platform")
+    # Two charts side by side: Revenue (50%) and ROAS (50%) with partition
+    revenue_col, roas_col = st.columns([1, 1], gap="small")
     
-    # Get insight data for hover effect
-    from utils.data_loader import get_revenue_by_platform_data
-    platform_revenue = get_revenue_by_platform_data(merged_df)
-    if platform_revenue is not None and len(platform_revenue) > 0:
-        highest_platform = platform_revenue.iloc[0]['platform']
-        highest_revenue = platform_revenue.iloc[0]['total_revenue']
+    with revenue_col:
+        st.markdown('<div class="chart-partition">', unsafe_allow_html=True)
+        st.subheader("📊 Revenue by Platform")
         
-        # Create chart container with hover insight
-        st.markdown(f"""
-        <div class="chart-container">
-            <div class="hover-insight">
-                <strong>💡 Key Insight:</strong><br>
-                <span style="color: #2E7D32; font-weight: bold;">
-                {highest_platform}</span> generates the highest revenue<br>
-                with <span style="color: #1B5E20; font-size: 18px; font-weight: bold;">
-                ${highest_revenue:,.0f}</span>
+        # Get insight data for hover effect
+        from utils.data_loader import get_revenue_by_platform_data
+        platform_revenue = get_revenue_by_platform_data(merged_df)
+        if platform_revenue is not None and len(platform_revenue) > 0:
+            highest_platform = platform_revenue.iloc[0]['platform']
+            highest_revenue = platform_revenue.iloc[0]['total_revenue']
+            
+            # Create chart container with hover insight
+            st.markdown(f"""
+            <div class="chart-container">
+                <div class="hover-insight">
+                    <strong>💡 Key Insight:</strong><br>
+                    <span style="color: #2E7D32; font-weight: bold;">
+                    {highest_platform}</span> generates the highest revenue<br>
+                    with <span style="color: #1B5E20; font-size: 18px; font-weight: bold;">
+                    ${highest_revenue:,.0f}</span>
+                </div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+        
+        # Display the revenue chart
+        revenue_chart = create_revenue_by_platform_chart(merged_df)
+        if revenue_chart:
+            st.plotly_chart(revenue_chart, use_container_width=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    # Display the revenue chart (full width)
-    revenue_chart = create_revenue_by_platform_chart(merged_df)
-    if revenue_chart:
-        st.plotly_chart(revenue_chart, use_container_width=True)
-    
+    with roas_col:
+        st.markdown('<div class="chart-section">', unsafe_allow_html=True)
+        st.subheader("📈 Return on Ad Spend by Platform")
+        
+        # Get ROAS insight data for hover effect
+        from utils.data_loader import get_roas_by_platform_data
+        roas_data = get_roas_by_platform_data(merged_df)
+        if roas_data is not None and len(roas_data) > 0:
+            best_roas_platform = roas_data.iloc[0]['platform']
+            best_roas_value = roas_data.iloc[0]['roas']
+            
+            # Create ROAS chart container with hover insight
+            st.markdown(f"""
+            <div class="chart-container">
+                <div class="hover-insight" style="top: 50px; left: 10px;">
+                    <strong>💰 ROAS Insight:</strong><br>
+                    <span style="color: #2E7D32; font-weight: bold;">
+                    {best_roas_platform}</span> has the highest ROAS<br>
+                    at <span style="color: #1B5E20; font-size: 18px; font-weight: bold;">
+                    {best_roas_value:.2f}x</span> return
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Display ROAS chart
+        roas_chart = create_roas_comparison_chart(merged_df)
+        if roas_chart:
+            st.plotly_chart(roas_chart, use_container_width=True)
+            
+            # Add instruction for ROAS chart
+            st.markdown("""
+            <div style="
+                background-color: #F3E5F5;
+                border: 2px solid #9C27B0;
+                border-radius: 15px;
+                padding: 12px;
+                margin: 10px 0;
+                text-align: center;
+            ">
+                <span style="color: #6A1B9A; font-size: 14px;">
+                💡 <strong>Higher ROAS = More Profitable Platform</strong><br>
+                <strong>Hover over bars</strong> for detailed profitability metrics
+                </span>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+
     # Add some spacing
     st.markdown("<br>", unsafe_allow_html=True)
     
     # Efficiency Chart - 50% width, centered
-    col1, efficiency_col, col3 = st.columns([1, 2, 1])  # 25% + 50% + 25% = centered 50%
+    col1, efficiency_col, col3 = st.columns([1, 2, 1])
     
     with efficiency_col:
         st.subheader("📈 Weekly Campaign Efficiency Trends")
@@ -237,6 +305,71 @@ def main():
                 </span>
             </div>
             """, unsafe_allow_html=True)
+
+    # Add some spacing
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # NEW: CAC vs CLV and Gross Profit Charts Section
+    st.markdown('<div class="section-header">Advanced Analytics</div>', unsafe_allow_html=True)
+    
+    # Two new charts: CAC/CLV (45%) and Gross Profit Waterfall (55%) with partition
+    cac_col, profit_col = st.columns([0.45, 0.55], gap="small")
+    
+    with cac_col:
+        st.markdown('<div class="chart-partition">', unsafe_allow_html=True)
+        st.subheader("💰 Customer Acquisition Analysis")
+        
+        # Display CAC vs CLV scatter chart
+        cac_chart = create_cac_clv_scatter_chart(merged_df)
+        if cac_chart:
+            st.plotly_chart(cac_chart, use_container_width=True)
+            
+            # Add instruction for CAC/CLV chart
+            st.markdown("""
+            <div style="
+                background-color: #FFF8E1;
+                border: 2px solid #FF9800;
+                border-radius: 15px;
+                padding: 12px;
+                margin: 10px 0;
+                text-align: center;
+            ">
+                <span style="color: #E65100; font-size: 14px;">
+                💡 <strong>Ideal: CLV should be 3x+ higher than CAC</strong><br>
+                <strong>Bubble size</strong> = Customer Volume
+                </span>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with profit_col:
+        st.markdown('<div class="chart-section">', unsafe_allow_html=True)
+        st.subheader("📊 Gross Profit Impact Analysis")
+        
+        # Display Gross Profit Waterfall chart
+        waterfall_chart = create_gross_profit_waterfall_chart(merged_df)
+        if waterfall_chart:
+            st.plotly_chart(waterfall_chart, use_container_width=True)
+            
+            # Add instruction for waterfall chart
+            st.markdown("""
+            <div style="
+                background-color: #E3F2FD;
+                border: 2px solid #2196F3;
+                border-radius: 15px;
+                padding: 12px;
+                margin: 10px 0;
+                text-align: center;
+            ">
+                <span style="color: #1565C0; font-size: 14px;">
+                📈 <strong>Shows true profitability after COGS and ad spend</strong><br>
+                <strong>Green</strong> = Profit | <strong>Red</strong> = Loss
+                </span>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # Future charts section
     st.markdown('<div class="section-header">Additional Analytics</div>', unsafe_allow_html=True)
