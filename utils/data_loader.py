@@ -198,7 +198,7 @@ def get_campaign_tactic_heatmap_data(merged_df):
 
 # NEW: Conversion Funnel Data
 def get_conversion_funnel_data(merged_df):
-    """Calculate conversion funnel performance by platform"""
+    """Calculate conversion funnel performance by platform - ENHANCED FOR HOVER EFFECTS WITH MATH VALUES"""
     try:
         # Load original campaign data for impressions and clicks
         facebook_df = pd.read_csv('data/Facebook.csv')
@@ -224,21 +224,43 @@ def get_conversion_funnel_data(merged_df):
             if len(platform_data) > 0:
                 orders = platform_data['total_orders'].iloc[0]
                 revenue = platform_data['total_revenue'].iloc[0]
+                spend = platform_data['spend'].iloc[0]
             else:
                 orders = clicks * 0.02  # 2% conversion rate
                 revenue = orders * 50   # $50 average order value
+                spend = df['spend'].sum()
             
-            # Calculate conversion rates
-            ctr = (clicks / impressions * 100) if impressions > 0 else 0
-            cr = (orders / clicks * 100) if clicks > 0 else 0
+            # Calculate PRECISE mathematical conversion rates for hover display
+            click_through_rate = (clicks / impressions * 100) if impressions > 0 else 0
+            conversion_rate = (orders / clicks * 100) if clicks > 0 else 0
             revenue_per_order = revenue / orders if orders > 0 else 0
             
-            # Create funnel stages
+            # Calculate additional cost metrics for mathematical insight
+            cost_per_click = spend / clicks if clicks > 0 else 0
+            cost_per_acquisition = spend / orders if orders > 0 else 0
+            
+            # Create funnel stages with PRECISE mathematical conversion rate data
             funnel_stages = [
-                {'Stage': 'Impressions', 'Value': impressions, 'Conversion_Rate': 100},
-                {'Stage': 'Clicks', 'Value': clicks, 'Conversion_Rate': ctr},
-                {'Stage': 'Orders', 'Value': orders, 'Conversion_Rate': cr},
-                {'Stage': 'Revenue', 'Value': revenue, 'Conversion_Rate': revenue_per_order}
+                {
+                    'Stage': 'Impressions', 
+                    'Value': impressions, 
+                    'Conversion_Rate': 100  # Base stage is always 100%
+                },
+                {
+                    'Stage': 'Clicks', 
+                    'Value': clicks, 
+                    'Conversion_Rate': click_through_rate  # CTR from impressions
+                },
+                {
+                    'Stage': 'Orders', 
+                    'Value': orders, 
+                    'Conversion_Rate': conversion_rate  # CR from clicks
+                },
+                {
+                    'Stage': 'Revenue', 
+                    'Value': revenue, 
+                    'Conversion_Rate': revenue_per_order  # Revenue per order
+                }
             ]
             
             for stage_data in funnel_stages:
@@ -254,6 +276,7 @@ def get_conversion_funnel_data(merged_df):
     except Exception as e:
         st.error(f"Error calculating funnel data: {e}")
         return None
+
 
 # Customer Acquisition Cost vs Customer Lifetime Value
 def get_cac_clv_data(merged_df):

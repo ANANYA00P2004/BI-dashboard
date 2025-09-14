@@ -4,7 +4,7 @@ from plotly.subplots import make_subplots
 import config
 
 def create_campaign_tactic_heatmap(merged_df):
-    """Create Campaign Tactic Effectiveness Matrix Heatmap - COMPLETELY FIXED"""
+    """Create Campaign Tactic Effectiveness Matrix Heatmap - FIXED TITLE SPACING"""
     from utils.data_loader import get_campaign_tactic_heatmap_data
     
     heatmap_data = get_campaign_tactic_heatmap_data(merged_df)
@@ -24,34 +24,39 @@ def create_campaign_tactic_heatmap(merged_df):
         text=heatmap_pivot.values,
         texttemplate="%{text:.0f}",
         textfont={"size": 11, "color": "black"},
-        hovertemplate='<b>%{y}</b> on <b>%{x}</b><br>' +
-                     'Performance Score: <b>%{z:.0f}/100</b><br>' +
+        hovertemplate='<b>%{y}</b> on <b>%{x}</b><br>' + 
+                     'Performance Score: <b>%{z:.0f}/100</b><br>' + 
                      '<i>Higher score = Better performance</i><extra></extra>',
         colorbar=dict(
-            title=dict(text="Performance<br>Score", font=dict(size=10)),  # FIXED: Proper title structure
-            tickfont=dict(size=9)  # FIXED: Keep tickfont for colorbar (this is correct)
+            title=dict(text="Performance<br>Score", font=dict(size=10)),
+            tickfont=dict(size=9)
         )
     ))
     
     fig.update_layout(
         title='Campaign Tactic Effectiveness Matrix',
         title_x=0.5,
-        height=400,
+        title_y=0.98,  # FIXED: Position title at very top
+        height=350,    # FIXED: Reduced height to accommodate title
+        margin=dict(t=100, b=10, l=60, r=80),  # FIXED: Proper margins
         xaxis_title="Campaign Tactics",
         yaxis_title="Platforms",
         xaxis=dict(
             tickfont=dict(size=10),
-            tickangle=45
+            tickangle=45,
+            title_standoff=20  # FIXED: Add space between axis and title
         ),
         yaxis=dict(
-            tickfont=dict(size=10)
-        )
+            tickfont=dict(size=10),
+            title_standoff=20  # FIXED: Add space between axis and title
+        ),
+        title_font=dict(size=14)  # FIXED: Smaller title font
     )
     
     return fig
 
 def create_conversion_funnel_chart(merged_df):
-    """Create Marketing Funnel Performance by Platform"""
+    """Create Marketing Funnel Performance by Platform - WITH ENHANCED HOVER EFFECTS"""
     from utils.data_loader import get_conversion_funnel_data
     
     funnel_data = get_conversion_funnel_data(merged_df)
@@ -75,22 +80,32 @@ def create_conversion_funnel_chart(merged_df):
     for i, platform in enumerate(platforms):
         platform_data = funnel_data[funnel_data['Platform'] == platform]
         
-        # Prepare funnel values
+        # Prepare funnel values and hover data
         funnel_values = []
         funnel_labels = []
+        hover_customdata = []
         
         for stage in stages:
             stage_data = platform_data[platform_data['Stage'] == stage]
             if len(stage_data) > 0:
                 value = stage_data['Value'].iloc[0]
+                conversion_rate = stage_data['Conversion_Rate'].iloc[0]
+                
                 if stage == 'Revenue':
                     funnel_labels.append(f'{stage}<br>${value:,.0f}')
                     funnel_values.append(value / 1000)  # Scale down revenue for visualization
+                    # Custom data for hover: [original_value, conversion_rate, stage, platform]
+                    hover_customdata.append([value, f"${conversion_rate:,.0f}/order", stage, platform])
                 else:
                     funnel_labels.append(f'{stage}<br>{value:,.0f}')
                     funnel_values.append(value)
+                    # Custom data for hover
+                    if stage == 'Impressions':
+                        hover_customdata.append([value, "100%", stage, platform])
+                    else:
+                        hover_customdata.append([value, f"{conversion_rate:.2f}%", stage, platform])
         
-        # Create funnel chart
+        # Create funnel chart with COMPLETE enhanced hover template
         fig.add_trace(go.Funnel(
             y=funnel_labels,
             x=funnel_values,
@@ -100,11 +115,18 @@ def create_conversion_funnel_chart(merged_df):
                 line=dict(width=2, color='white')
             ),
             textinfo="value+percent initial",
-            textfont=dict(size=10),
-            hovertemplate='<b>%{fullData.name}</b><br>' +
-                         '%{label}<br>' +
-                         'Value: %{value}<br>' +
-                         '<i>Conversion funnel stage</i><extra></extra>',
+            textfont=dict(size=10, color='white'),
+            # COMPLETE ENHANCED HOVER TEMPLATE WITH HTML FORMATTING
+            hovertemplate='<b style="font-size: 14px; color: #FFD700;">🎯 %{fullData.name} Platform</b><br>' +
+                         '<hr style="border: 1px solid #FFD700; margin: 5px 0;">' +
+                         '<b style="color: #87CEEB;">📊 Stage:</b> <span style="color: white;">%{customdata[2]}</span><br>' +
+                         '<b style="color: #87CEEB;">📈 Volume:</b> <span style="color: #90EE90; font-size: 13px;">%{customdata[0]:,.0f}</span><br>' +
+                         '<b style="color: #87CEEB;">🎯 Rate:</b> <span style="color: #FFB6C1;">%{customdata[1]}</span><br>' +
+                         '<b style="color: #87CEEB;">💡 Performance:</b> <span style="color: #F0E68C;">%{percent}</span><br>' +
+                         '<hr style="border: 1px solid #FFD700; margin: 5px 0;">' +
+                         '<i style="color: #DDA0DD; font-size: 11px;">🔍 Analyze conversion bottlenecks</i>' +
+                         '<extra></extra>',
+            customdata=hover_customdata,
             orientation='v'
         ))
     
@@ -112,6 +134,8 @@ def create_conversion_funnel_chart(merged_df):
         title='Marketing Funnel Performance by Platform',
         title_x=0.5,
         height=450,
+        margin=dict(t=20, b=10, l=20, r=20),  # Add this line - increased top margin
+        title_y=0.95,  # Add this line - position title lower
         showlegend=True,
         legend=dict(
             orientation="h",
@@ -121,10 +145,18 @@ def create_conversion_funnel_chart(merged_df):
             x=0.5,
             font=dict(size=10)
         ),
-        font=dict(size=11)
+        font=dict(size=11),
+        # Enhanced hover interaction
+        hoverlabel=dict(
+            bgcolor="rgba(0,0,0,0.8)",
+            bordercolor="rgba(255,215,0,0.8)",
+            font_size=12,
+            font_family="Arial"
+        )
     )
     
     return fig
+
 
 def create_cac_clv_scatter_chart(merged_df):
     """Create Customer Acquisition Cost vs Customer Lifetime Value Scatter Plot"""

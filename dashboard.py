@@ -14,96 +14,133 @@ st.set_page_config(
     layout="wide"
 )
 
-# Clean CSS for KPI cards + Hover effect for chart section + Partition line
+# MINIMAL SPACING CSS with removed top margins and compact KPIs
 st.markdown("""
 <style>
-    .dashboard-title {
-        text-align: center;
-        font-size: 36px;
-        font-weight: bold;
-        color: #1565C0;
-        margin-bottom: 30px;
+    /* Hide Streamlit default header and remove all top spacing */
+    .main .block-container {
+        padding-top: 0rem !important;
+        padding-bottom: 1rem;
+        max-width: none;
     }
     
+    /* Remove default Streamlit margins */
+    .stApp > header {
+        background-color: transparent;
+    }
+    
+    .dashboard-title {
+        text-align: center;
+        font-size: 26px;
+        font-weight: bold;
+        color: #1565C0;
+        margin-bottom: 8px;
+        margin-top: 0px !important;
+        padding-top: 0px !important;
+    }
+    
+    /* Ultra-minimal KPI cards */
     div[data-testid="metric-container"] {
         background-color: #E3F2FD;
-        border: 2px solid #BBDEFB;
-        padding: 20px;
-        border-radius: 20px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        margin: 8px 0;
+        border: 1px solid #BBDEFB;
+        padding: 8px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        margin: 2px 0;
         transition: transform 0.2s ease;
-        min-height: 120px;
+        min-height: 65px;
         display: flex;
         flex-direction: column;
         justify-content: center;
     }
     
     div[data-testid="metric-container"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
     div[data-testid="metric-container"] > div[data-testid="stMarkdownContainer"] > div {
         color: #1565C0 !important;
-        font-size: 14px !important;
+        font-size: 10px !important;
         font-weight: 500 !important;
         text-align: center;
-        margin-bottom: 10px !important;
-        line-height: 1.2 !important;
+        margin-bottom: 4px !important;
+        line-height: 1.0 !important;
     }
     
     div[data-testid="metric-container"] > div > div[data-testid="stMarkdownContainer"] > div {
         color: #0D47A1 !important;
-        font-size: 28px !important;
+        font-size: 18px !important;
         font-weight: bold !important;
         text-align: center;
     }
     
     .section-header {
         color: #1565C0;
-        font-size: 24px;
+        font-size: 16px;
         font-weight: 600;
-        margin: 20px 0 15px 0;
-        border-bottom: 2px solid #BBDEFB;
-        padding-bottom: 5px;
+        margin: 4px 0 3px 0;
+        border-bottom: 1px solid #BBDEFB;
+        padding-bottom: 1px;
     }
     
-    /* Hover effect for chart container */
+    /* Minimal chart containers */
+    .chart-container-compact {
+        background-color: #FAFAFA;
+        border-radius: 6px;
+        padding: 6px;
+        margin: 1px 0;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    
+    .chart-title-compact {
+        color: #1565C0;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 3px;
+        text-align: center;
+    }
+    
+    /* Ultra-minimal hover effects */
     .chart-container {
         position: relative;
     }
     
     .hover-insight {
         position: absolute;
-        top: 50px;
-        right: 10px;
+        top: 30px;
+        right: 6px;
         background-color: #E8F5E8;
-        border: 2px solid #4CAF50;
-        border-radius: 15px;
-        padding: 15px;
+        border: 1px solid #4CAF50;
+        border-radius: 6px;
+        padding: 6px;
         opacity: 0;
         transition: opacity 0.3s ease;
         pointer-events: none;
         z-index: 1000;
-        max-width: 250px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        max-width: 160px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        font-size: 10px;
     }
     
     .chart-container:hover .hover-insight {
         opacity: 1;
     }
     
-    /* Blue partition line between charts */
-    .chart-partition {
-        border-right: 4px solid #1565C0;
-        padding-right: 15px;
-        margin-right: 10px;
+    /* Ultra-compact info boxes */
+    .info-box-compact {
+        background-color: #F8F9FA;
+        border: 1px solid #DEE2E6;
+        border-radius: 4px;
+        padding: 4px;
+        margin: 1px 0;
+        text-align: center;
+        font-size: 10px;
     }
     
-    .chart-section {
-        padding-left: 15px;
-        margin-left: 10px;
+    /* Remove any extra spacing from columns */
+    .stColumn > div {
+        padding: 0 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -119,7 +156,7 @@ def calculate_kpis(merged_df):
     return total_revenue, total_orders, avg_cogs, overall_roas
 
 def main():
-    # Dashboard Title
+    # Dashboard Title - Ultra-compact
     st.markdown('<h1 class="dashboard-title">Marketing Intelligence Dashboard</h1>', unsafe_allow_html=True)
     
     # Load and merge data
@@ -140,318 +177,181 @@ def main():
     # Calculate KPIs
     total_revenue, total_orders, avg_cogs, overall_roas = calculate_kpis(merged_df)
     
-    # KPI Cards Row
+    # ROW 1: MINIMAL KPI Cards
     st.markdown('<div class="section-header">Key Performance Indicators</div>', unsafe_allow_html=True)
     
-    kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4, gap="medium")
+    kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4, gap="small")
     
     with kpi_col1:
-        st.metric(
-            label="💰 Total Revenue Across All Platforms",
-            value=f"${total_revenue:,.0f}"
-        )
+        st.metric(label="💰 Revenue", value=f"${total_revenue:,.0f}")
     
     with kpi_col2:
-        st.metric(
-            label="🛒 Total Orders Generated",
-            value=f"{total_orders:,.0f}"
-        )
+        st.metric(label="🛒 Orders", value=f"{total_orders:,.0f}")
     
     with kpi_col3:
-        st.metric(
-            label="📊 Average COGS Percentage",
-            value=f"{avg_cogs:.1f}%"
-        )
+        st.metric(label="📊 COGS %", value=f"{avg_cogs:.1f}%")
     
     with kpi_col4:
-        st.metric(
-            label="📈 Overall ROAS",
-            value=f"{overall_roas:.2f}x"
-        )
+        st.metric(label="📈 ROAS", value=f"{overall_roas:.2f}x")
     
-    # Chart Section - Two charts side by side with blue partition line
-    st.markdown('<div class="section-header">Platform Performance Analysis</div>', unsafe_allow_html=True)
+    # ROW 2: Three Charts - ULTRA-MINIMAL SPACING
+    st.markdown('<div class="section-header">Platform Performance Overview</div>', unsafe_allow_html=True)
     
-    # Two charts side by side: Revenue (50%) and ROAS (50%) with partition
-    revenue_col, roas_col = st.columns([1, 1], gap="small")
+    chart_col1, chart_col2, chart_col3 = st.columns([1, 1, 1], gap="small")
     
-    with revenue_col:
-        st.markdown('<div class="chart-partition">', unsafe_allow_html=True)
-        st.subheader("📊 Revenue by Platform")
+    # Chart 1: Revenue by Platform
+    with chart_col1:
+        st.markdown('<div class="chart-title-compact">📊 Revenue by Platform</div>', unsafe_allow_html=True)
         
-        # Get insight data for hover effect
+        # Ultra-minimal hover insight
         from utils.data_loader import get_revenue_by_platform_data
         platform_revenue = get_revenue_by_platform_data(merged_df)
         if platform_revenue is not None and len(platform_revenue) > 0:
             highest_platform = platform_revenue.iloc[0]['platform']
             highest_revenue = platform_revenue.iloc[0]['total_revenue']
             
-            # Create chart container with hover insight
             st.markdown(f"""
             <div class="chart-container">
                 <div class="hover-insight">
-                    <strong>💡 Key Insight:</strong><br>
-                    <span style="color: #2E7D32; font-weight: bold;">
-                    {highest_platform}</span> generates the highest revenue<br>
-                    with <span style="color: #1B5E20; font-size: 18px; font-weight: bold;">
-                    ${highest_revenue:,.0f}</span>
+                    <strong>Top:</strong> {highest_platform}<br>
+                    ${highest_revenue:,.0f}
                 </div>
             </div>
             """, unsafe_allow_html=True)
         
-        # Display the revenue chart
         revenue_chart = create_revenue_by_platform_chart(merged_df)
         if revenue_chart:
+            revenue_chart.update_layout(height=260, margin=dict(t=20, b=20, l=20, r=20))
             st.plotly_chart(revenue_chart, use_container_width=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
     
-    with roas_col:
-        st.markdown('<div class="chart-section">', unsafe_allow_html=True)
-        st.subheader("📈 Return on Ad Spend by Platform")
+    # Chart 2: Customer Acquisition Analysis
+    with chart_col2:
+        st.markdown('<div class="chart-title-compact">💰 Customer Acquisition</div>', unsafe_allow_html=True)
         
-        # Get ROAS insight data for hover effect
+        cac_chart = create_cac_clv_scatter_chart(merged_df)
+        if cac_chart:
+            cac_chart.update_layout(height=260, margin=dict(t=20, b=20, l=20, r=40))
+            st.plotly_chart(cac_chart, use_container_width=True)
+    
+    # Chart 3: ROAS Comparison
+    with chart_col3:
+        st.markdown('<div class="chart-title-compact">📈 ROAS by Platform</div>', unsafe_allow_html=True)
+        
+        # Ultra-minimal ROAS insight
         from utils.data_loader import get_roas_by_platform_data
         roas_data = get_roas_by_platform_data(merged_df)
         if roas_data is not None and len(roas_data) > 0:
             best_roas_platform = roas_data.iloc[0]['platform']
             best_roas_value = roas_data.iloc[0]['roas']
             
-            # Create ROAS chart container with hover insight
             st.markdown(f"""
             <div class="chart-container">
-                <div class="hover-insight" style="top: 50px; left: 10px;">
-                    <strong>💰 ROAS Insight:</strong><br>
-                    <span style="color: #2E7D32; font-weight: bold;">
-                    {best_roas_platform}</span> has the highest ROAS<br>
-                    at <span style="color: #1B5E20; font-size: 18px; font-weight: bold;">
-                    {best_roas_value:.2f}x</span> return
+                <div class="hover-insight">
+                    <strong>Best:</strong> {best_roas_platform}<br>
+                    {best_roas_value:.2f}x
                 </div>
             </div>
             """, unsafe_allow_html=True)
         
-        # Display ROAS chart
         roas_chart = create_roas_comparison_chart(merged_df)
         if roas_chart:
+            roas_chart.update_layout(height=260, margin=dict(t=20, b=20, l=50, r=20))
             st.plotly_chart(roas_chart, use_container_width=True)
-            
-            # Add instruction for ROAS chart
-            st.markdown("""
-            <div style="
-                background-color: #F3E5F5;
-                border: 2px solid #9C27B0;
-                border-radius: 15px;
-                padding: 12px;
-                margin: 10px 0;
-                text-align: center;
-            ">
-                <span style="color: #6A1B9A; font-size: 14px;">
-                💡 <strong>Higher ROAS = More Profitable Platform</strong><br>
-                <strong>Hover over bars</strong> for detailed profitability metrics
-                </span>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    # Add some spacing
-    st.markdown("<br>", unsafe_allow_html=True)
     
-    # Efficiency Chart - 50% width, centered
-    col1, efficiency_col, col3 = st.columns([1, 2, 1])
+    # ROW 3: Two Charts - ULTRA-MINIMAL SPACING
+    st.markdown('<div class="section-header">Performance Trends & Profitability</div>', unsafe_allow_html=True)
     
-    with efficiency_col:
-        st.subheader("📈 Weekly Campaign Efficiency Trends")
+    trend_col1, trend_col2 = st.columns([0.6, 0.4], gap="small")
+    
+    # Chart 4: Weekly Campaign Efficiency Trends
+    with trend_col1:
+        st.markdown('<div class="chart-title-compact">📈 Weekly Campaign Efficiency</div>', unsafe_allow_html=True)
         
-        # Create efficiency chart container with hover insight
+        # Ultra-minimal efficiency insight
         from utils.data_loader import get_efficiency_metrics_data
         efficiency_data = get_efficiency_metrics_data(merged_df)
         
         if efficiency_data is not None and len(efficiency_data) > 0:
-            # Calculate best performing platform by average CPC
             avg_cpc_by_platform = efficiency_data.groupby('platform')['cpc'].mean().sort_values()
             best_platform = avg_cpc_by_platform.index[0]
             best_cpc = avg_cpc_by_platform.iloc[0]
             
             st.markdown(f"""
             <div class="chart-container">
-                <div class="hover-insight" style="top: 50px; left: 10px;">
-                    <strong>⚡ Weekly Efficiency Insight:</strong><br>
-                    <span style="color: #2E7D32; font-weight: bold;">
-                    {best_platform}</span> has the lowest average weekly CPC<br>
-                    at <span style="color: #1B5E20; font-size: 18px; font-weight: bold;">
-                    ${best_cpc:.2f}</span> per click
+                <div class="hover-insight">
+                    <strong>Best:</strong> {best_platform}<br>
+                    ${best_cpc:.2f} CPC
                 </div>
             </div>
             """, unsafe_allow_html=True)
         
-        # Display efficiency chart
         efficiency_chart = create_efficiency_trends_chart(merged_df)
         if efficiency_chart:
+            efficiency_chart.update_layout(height=280, margin=dict(t=20, b=20, l=20, r=60))
             st.plotly_chart(efficiency_chart, use_container_width=True)
-            
-            # Updated instruction for efficiency chart
-            st.markdown("""
-            <div style="
-                background-color: #E8F5E8;
-                border: 2px solid #4CAF50;
-                border-radius: 15px;
-                padding: 12px;
-                margin: 10px 0;
-                text-align: center;
-            ">
-                <span style="color: #2E7D32; font-size: 14px;">
-                📊 <strong>CPC:</strong> Blue tones | <strong>CPA:</strong> Green/Orange/Purple<br>
-                <strong>Hover over lines</strong> for weekly efficiency metrics
-                </span>
-            </div>
-            """, unsafe_allow_html=True)
-
-    # Add some spacing
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # NEW: CAC vs CLV and Gross Profit Charts Section
-    st.markdown('<div class="section-header">Advanced Analytics</div>', unsafe_allow_html=True)
     
-    # Two new charts: CAC/CLV (45%) and Gross Profit Waterfall (55%) with partition
-    cac_col, profit_col = st.columns([0.45, 0.55], gap="small")
-    
-    with cac_col:
-        st.markdown('<div class="chart-partition">', unsafe_allow_html=True)
-        st.subheader("💰 Customer Acquisition Analysis")
+    # Chart 5: Gross Profit Impact Analysis
+    with trend_col2:
+        st.markdown('<div class="chart-title-compact">📊 Gross Profit Impact</div>', unsafe_allow_html=True)
         
-        # Display CAC vs CLV scatter chart
-        cac_chart = create_cac_clv_scatter_chart(merged_df)
-        if cac_chart:
-            st.plotly_chart(cac_chart, use_container_width=True)
-            
-            # Add instruction for CAC/CLV chart
-            st.markdown("""
-            <div style="
-                background-color: #FFF8E1;
-                border: 2px solid #FF9800;
-                border-radius: 15px;
-                padding: 12px;
-                margin: 10px 0;
-                text-align: center;
-            ">
-                <span style="color: #E65100; font-size: 14px;">
-                💡 <strong>Ideal: CLV should be 3x+ higher than CAC</strong><br>
-                <strong>Bubble size</strong> = Customer Volume
-                </span>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    with profit_col:
-        st.markdown('<div class="chart-section">', unsafe_allow_html=True)
-        st.subheader("📊 Gross Profit Impact Analysis")
-        
-        # Display Gross Profit Waterfall chart
         waterfall_chart = create_gross_profit_waterfall_chart(merged_df)
         if waterfall_chart:
+            waterfall_chart.update_layout(height=280, margin=dict(t=20, b=20, l=20, r=20))
             st.plotly_chart(waterfall_chart, use_container_width=True)
-            
-            # Add instruction for waterfall chart
-            st.markdown("""
-            <div style="
-                background-color: #E3F2FD;
-                border: 2px solid #2196F3;
-                border-radius: 15px;
-                padding: 12px;
-                margin: 10px 0;
-                text-align: center;
-            ">
-                <span style="color: #1565C0; font-size: 14px;">
-                📈 <strong>Shows true profitability after COGS and ad spend</strong><br>
-                <strong>Different colors</strong> per platform
-                </span>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    # Add some spacing
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # NEW: Campaign Tactic Heatmap and Conversion Funnel Charts Section
-    st.markdown('<div class="section-header">Campaign Performance Analysis</div>', unsafe_allow_html=True)
     
-    # Two new charts: Tactic Heatmap (45%) and Conversion Funnel (55%) with partition
-    tactic_col, funnel_col = st.columns([0.45, 0.55], gap="small")
+    # ULTRA-MINIMAL Info Boxes - Single Row
+    info_col1, info_col2, info_col3 = st.columns(3, gap="small")
     
-    with tactic_col:
-        st.markdown('<div class="chart-partition">', unsafe_allow_html=True)
-        st.subheader("🎯 Campaign Tactic Analysis")
+    with info_col1:
+        st.markdown('<div class="info-box-compact" style="color: #2E7D32;">💡 Revenue & ROAS comparison</div>', unsafe_allow_html=True)
+    
+    with info_col2:
+        st.markdown('<div class="info-box-compact" style="color: #E65100;">🎯 CLV vs CAC analysis</div>', unsafe_allow_html=True)
+    
+    with info_col3:
+        st.markdown('<div class="info-box-compact" style="color: #1565C0;">📊 Weekly trends & profit</div>', unsafe_allow_html=True)
+
+    # SECTION: Additional Analytics (Ultra-compact and Scrollable)
+    st.markdown('<div class="section-header">Advanced Campaign Analysis</div>', unsafe_allow_html=True)
+    
+    # Two additional charts with ultra-minimal spacing
+    advanced_col1, advanced_col2 = st.columns([0.45, 0.55], gap="small")
+    
+    with advanced_col1:
+        st.markdown('<div style="border-right: 1px solid #1565C0; padding-right: 8px;">', unsafe_allow_html=True)
+        st.markdown('<div style="font-size: 14px; font-weight: 600; color: #1565C0; margin-bottom: 10px;">🎯 Campaign Tactic Analysis</div>', unsafe_allow_html=True)
         
-        # Display Campaign Tactic Heatmap
         tactic_chart = create_campaign_tactic_heatmap(merged_df)
         if tactic_chart:
+            tactic_chart.update_layout(height=320, margin=dict(t=15, b=15, l=15, r=15))
             st.plotly_chart(tactic_chart, use_container_width=True)
-            
-            # Add instruction for tactic heatmap
-            st.markdown("""
-            <div style="
-                background-color: #FFF3E0;
-                border: 2px solid #FF9800;
-                border-radius: 15px;
-                padding: 12px;
-                margin: 10px 0;
-                text-align: center;
-            ">
-                <span style="color: #E65100; font-size: 14px;">
-                🎯 <strong>Green = Best Performance | Red = Needs Improvement</strong><br>
-                <strong>Identify</strong> top tactic-platform combinations
-                </span>
-            </div>
-            """, unsafe_allow_html=True)
         
         st.markdown('</div>', unsafe_allow_html=True)
     
-    with funnel_col:
-        st.markdown('<div class="chart-section">', unsafe_allow_html=True)
-        st.subheader("📈 Conversion Funnel Analysis")
+    with advanced_col2:
+        st.markdown('<div style="padding-left: 8px;">', unsafe_allow_html=True)
+        st.markdown('<div style="font-size: 14px; font-weight: 600; color: #1565C0; margin-bottom: 5px;">📈 Conversion Funnel Analysis</div>', unsafe_allow_html=True)
         
-        # Display Conversion Funnel chart
         funnel_chart = create_conversion_funnel_chart(merged_df)
         if funnel_chart:
+            funnel_chart.update_layout(height=320, margin=dict(t=15, b=15, l=15, r=15))
             st.plotly_chart(funnel_chart, use_container_width=True)
-            
-            # Add instruction for funnel chart
-            st.markdown("""
-            <div style="
-                background-color: #E8F5E8;
-                border: 2px solid #4CAF50;
-                border-radius: 15px;
-                padding: 12px;
-                margin: 10px 0;
-                text-align: center;
-            ">
-                <span style="color: #2E7D32; font-size: 14px;">
-                📊 <strong>Impressions → Clicks → Orders → Revenue</strong><br>
-                <strong>Identify</strong> conversion bottlenecks per platform
-                </span>
-            </div>
-            """, unsafe_allow_html=True)
         
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # Future charts section
-    st.markdown('<div class="section-header">Additional Analytics</div>', unsafe_allow_html=True)
+    # Ultra-compact final message
     st.markdown("""
     <div style="
-        background-color: #FFF3E0;
-        border: 2px solid #FF9800;
-        border-radius: 15px;
-        padding: 20px;
-        margin: 10px 0;
+        background: linear-gradient(135deg, #E3F2FD, #F3E5F5);
+        border-radius: 6px;
+        padding: 8px;
+        margin: 8px 0;
         text-align: center;
+        border: 1px solid #BBDEFB;
     ">
-        <h4 style="color: #E65100;">📊 More Insights Coming Soon</h4>
-        <p style="color: #BF360C;">
-            Additional marketing analytics and performance metrics will be displayed here.
-        </p>
+        <span style="color: #1565C0; font-size: 12px; font-weight: 500;">
+        📊 Complete Marketing Intelligence Dashboard
+        </span>
     </div>
     """, unsafe_allow_html=True)
 
