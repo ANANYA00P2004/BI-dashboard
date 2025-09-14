@@ -78,7 +78,7 @@ def create_campaign_tactic_heatmap(merged_df):
         z=heatmap_pivot.values,
         x=heatmap_pivot.columns,
         y=heatmap_pivot.index,
-        colorscale='RdYlGn',
+        colorscale='Greens',
         text=heatmap_pivot.values,
         texttemplate="%{text:.0f}",
         textfont={"size": 11, "color": "black"},
@@ -121,7 +121,7 @@ def create_campaign_tactic_heatmap(merged_df):
     return fig
 
 def create_conversion_funnel_chart(merged_df):
-    """Create Marketing Funnel Performance by Platform - WITH ENHANCED HOVER EFFECTS"""
+    """Create Marketing Funnel Performance by Platform - NEW IMPROVED VERSION"""
     from utils.data_loader import get_conversion_funnel_data
     
     funnel_data = get_conversion_funnel_data(merged_df)
@@ -129,94 +129,169 @@ def create_conversion_funnel_chart(merged_df):
     if funnel_data is None or len(funnel_data) == 0:
         return None
     
-    fig = go.Figure()
-    
-    # Platform colors
-    platform_colors = {
-        'Facebook': config.PLATFORM_COLORS.get('Facebook', '#1877F2'),
-        'Google': config.PLATFORM_COLORS.get('Google', '#4285F4'),
-        'TikTok': config.PLATFORM_COLORS.get('TikTok', '#FF0050')
-    }
+    # Create subplot for multiple funnels side by side
+    from plotly.subplots import make_subplots
     
     platforms = funnel_data['Platform'].unique()
+    
+    # Create subplots - one column per platform
+    fig = make_subplots(
+        rows=1, 
+        cols=len(platforms),
+        specs=[[{"type": "funnel"} for _ in platforms]],
+        subplot_titles=[f"{platform} Funnel" for platform in platforms],
+        horizontal_spacing=0.15
+    )
+    
+    # Enhanced platform colors
+    platform_colors = {
+       'Facebook': '#d63a29',
+       'Google': '#65ad52', 
+       'TikTok': '#37b0c8'
+    }
+    
     stages = ['Impressions', 'Clicks', 'Orders', 'Revenue']
     
     # Create funnel for each platform
-    for i, platform in enumerate(platforms):
+    for col_idx, platform in enumerate(platforms):
         platform_data = funnel_data[funnel_data['Platform'] == platform]
         
-        # Prepare funnel values and hover data
+        # Prepare funnel data
         funnel_values = []
         funnel_labels = []
-        hover_customdata = []
+        hover_data = []
+        conversion_rates = []
         
+        # Calculate conversion rates between stages
+        stage_values = {}
         for stage in stages:
             stage_data = platform_data[platform_data['Stage'] == stage]
             if len(stage_data) > 0:
-                value = stage_data['Value'].iloc[0]
-                conversion_rate = stage_data['Conversion_Rate'].iloc[0]
-                
-                if stage == 'Revenue':
-                    funnel_labels.append(f'{stage}<br>${value:,.0f}')
-                    funnel_values.append(value / 1000)  # Scale down revenue for visualization
-                    # Custom data for hover: [original_value, conversion_rate, stage, platform]
-                    hover_customdata.append([value, f"${conversion_rate:,.0f}/order", stage, platform])
-                else:
-                    funnel_labels.append(f'{stage}<br>{value:,.0f}')
-                    funnel_values.append(value)
-                    # Custom data for hover
-                    if stage == 'Impressions':
-                        hover_customdata.append([value, "100%", stage, platform])
-                    else:
-                        hover_customdata.append([value, f"{conversion_rate:.2f}%", stage, platform])
+                stage_values[stage] = stage_data['Value'].iloc[0]
         
-        # Create funnel chart with clean hover template
-        fig.add_trace(go.Funnel(
-            y=funnel_labels,
-            x=funnel_values,
-            name=platform,
-            marker=dict(
-                color=platform_colors[platform],
-                line=dict(width=2, color='white')
+        # Build funnel data with conversion rates
+        for i, stage in enumerate(stages):
+            if stage in stage_values:
+                value = stage_values[stage]
+                
+                # Calculate conversion rate from previous stage
+                if i == 0:
+                    conv_rate = 100.0  # Impressions = 100%
+                    rate_text = "100%"
+                elif i == 1:  # Clicks
+                    conv_rate = (value / stage_values['Impressions'] * 100) if stage_values['Impressions'] > 0 else 0
+                    rate_text = f"{conv_rate:.2f}%"
+                elif i == 2:  # Orders
+                    conv_rate = (value / stage_values['Clicks'] * 100) if stage_values['Clicks'] > 0 else 0
+                    rate_text = f"{conv_rate:.2f}%"
+                else:  # Revenue
+                    avg_order_value = value / stage_values['Orders'] if stage_values['Orders'] > 0 else 0
+                    conv_rate = avg_order_value
+                    rate_text = f"${avg_order_value:,.0f}/order"
+                
+                # Format values appropriately
+                if stage == 'Revenue':
+                    display_value = value / 1000  # Scale for visualization
+                    label_text = f"{stage}<br>${value:,.0f}"
+                else:
+                    display_value = value
+                    label_text = f"{stage}<br>{value:,.0f}"
+                
+                funnel_values.append(display_value)
+                funnel_labels.append(label_text)
+                conversion_rates.append(rate_text)
+                
+                # Hover data
+                hover_data.append({
+                    'stage': stage,
+                    'value': value,
+                    'rate': rate_text,
+                    'platform': platform
+                })
+        
+        # Add funnel trace
+        fig.add_trace(
+            go.Funnel(
+                y=funnel_labels,
+                x=funnel_values,
+                name=platform,
+                marker=dict(
+                    color=platform_colors.get(platform, '#666666'),
+                    line=dict(color='white', width=3)
+                ),
+                textinfo="value+percent initial",
+                textfont=dict(size=11, color='white', family='Arial Black'),
+                # Enhanced hover template
+                hovertemplate=(
+                    '<b>🎯 %{fullData.name} Platform</b><br>' +
+                    '<b>Stage:</b> %{customdata[0]}<br>' +
+                    '<b>Volume:</b> %{customdata[1]:,.0f}<br>' +
+                    '<b>Conversion Rate:</b> %{customdata[2]}<br>' +
+                    '<b>Performance:</b> %{percent}<br>' +
+                    '<i>Click to analyze bottlenecks</i><extra></extra>'
+                ),
+                customdata=[[hd['stage'], hd['value'], hd['rate']] for hd in hover_data],
+                textposition='inside'
             ),
-            textinfo="value+percent initial",
-            textfont=dict(size=10, color='white'),
-            # Clean hover template
-            hovertemplate='<b>🎯 %{fullData.name} Platform</b><br>' +
-                         'Stage: %{customdata[2]}<br>' +
-                         'Volume: %{customdata[0]:,.0f}<br>' +
-                         'Rate: %{customdata[1]}<br>' +
-                         'Performance: %{percent}<br>' +
-                         'Analyze conversion bottlenecks<extra></extra>',
-            customdata=hover_customdata,
-            orientation='v'
-        ))
+            row=1, col=col_idx+1
+        )
     
+    # Update layout with enhanced styling
     fig.update_layout(
-        title='Marketing Funnel Performance by Platform',
-        title_x=0.5,
-        height=320,
-        margin=dict(t=70, b=10, l=20, r=20),  # Adjusted margins
-        title_y=0.95,  # Position title lower
-        showlegend=True,
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="center",
-            x=0.5,
-            font=dict(size=10)
-        ),
-        font=dict(size=11),
+        title={
+            'text': '""Marketing Funnel Performance by Platform""',
+            'x': 0.5,
+            'xanchor': 'center',
+            'font': {'size': 12, 'family': 'Arial Black', 'color': '#2c3e50'}
+        },
+        height=450,
+        margin=dict(t=80, b=60, l=40, r=40),
+        showlegend=False,  # Individual titles show platform names
+        font=dict(family="Arial", size=12),
         # White background hover
         hoverlabel=dict(
             bgcolor="white",
             bordercolor="black",
-            font_size=12,
+            font_size=13,
             font_family="Arial",
             font_color="black"
-        )
+        ),
+        # Enhanced subplot titles
+        annotations=[
+            dict(
+                text=f"<b>{platform}</b>",
+                x=(i + 0.5) / len(platforms),
+                y=1.02,
+                xref="paper",
+                yref="paper",
+                showarrow=False,
+                font=dict(size=14, color=platform_colors.get(platform, '#666666'), family='Arial Black')
+            ) for i, platform in enumerate(platforms)
+        ]
     )
+    
+    # Add conversion rate annotations below each funnel
+    for col_idx, platform in enumerate(platforms):
+        platform_data = funnel_data[funnel_data['Platform'] == platform]
+        
+        # Calculate overall funnel efficiency
+        impressions = platform_data[platform_data['Stage'] == 'Impressions']['Value'].iloc[0] if len(platform_data[platform_data['Stage'] == 'Impressions']) > 0 else 1
+        orders = platform_data[platform_data['Stage'] == 'Orders']['Value'].iloc[0] if len(platform_data[platform_data['Stage'] == 'Orders']) > 0 else 0
+        
+        overall_conversion = (orders / impressions * 100) if impressions > 0 else 0
+        
+        fig.add_annotation(
+            text=f"<b>Overall Conversion: {overall_conversion:.3f}%</b>",
+            x=(col_idx + 0.5) / len(platforms),
+            y=-0.12,
+            xref="paper",
+            yref="paper",
+            showarrow=False,
+            font=dict(size=11, color='#34495e', family='Arial'),
+            bgcolor="rgba(236, 240, 241, 0.8)",
+            bordercolor="#bdc3c7",
+            borderwidth=1
+        )
     
     return fig
 
@@ -305,9 +380,9 @@ def create_engagement_metrics_chart(merged_df):
     
     # Colors for different metrics
     impression_colors = {
-        'Facebook': '#1877F2',
-        'Google': '#4285F4', 
-        'TikTok': '#FF0050'
+        'Facebook': '#d63a29',
+        'Google': '#65ad52', 
+        'TikTok': '#37b0c8'
     }
     
     click_colors = {
@@ -668,9 +743,9 @@ def create_efficiency_trends_chart(merged_df):
     
     # Updated color scheme - different colors for CPC vs CPA
     cpc_colors = {
-        'Facebook': '#1877F2',  # Facebook Blue
-        'Google': '#4285F4',    # Google Blue
-        'TikTok': '#FF0050'     # TikTok Pink
+        'Facebook': '#d63a29',
+        'Google': '#65ad52', 
+        'TikTok': '#37b0c8'
     }
     
     cpa_colors = {

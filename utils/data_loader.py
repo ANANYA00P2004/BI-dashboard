@@ -17,7 +17,6 @@ def load_campaign_data():
         campaign_df['date'] = pd.to_datetime(campaign_df['date'])
         
         return campaign_df
-        
     except Exception as e:
         st.error(f"Error loading campaign data: {e}")
         return None
@@ -41,7 +40,6 @@ def load_business_data():
         
         business_df = business_df.rename(columns=column_mapping)
         return business_df
-        
     except Exception as e:
         st.error(f"Error loading business data: {e}")
         return None
@@ -98,7 +96,6 @@ def get_roas_by_platform_data(merged_df):
         total_clicks = sum([metrics['total_clicks'] for metrics in platform_metrics.values()])
         
         roas_data = []
-        
         for platform, metrics in platform_metrics.items():
             # PRECISE performance-based revenue allocation
             click_share = metrics['total_clicks'] / total_clicks if total_clicks > 0 else 0
@@ -132,7 +129,6 @@ def get_roas_by_platform_data(merged_df):
         roas_df = roas_df.sort_values('roas', ascending=False)
         
         return roas_df
-        
     except Exception as e:
         st.error(f"Error calculating ROAS data: {e}")
         # Fallback: create sample data with different ROAS values
@@ -141,6 +137,7 @@ def get_roas_by_platform_data(merged_df):
             {'platform': 'Facebook', 'total_revenue': 89000, 'total_spend': 1800, 'roas': 49.4, 'clicks': 3200, 'ctr': 6.2},
             {'platform': 'TikTok', 'total_revenue': 76000, 'total_spend': 1200, 'roas': 63.3, 'clicks': 2800, 'ctr': 4.1}
         ]
+        
         return pd.DataFrame(roas_data)
 
 def get_campaign_tactic_heatmap_data(merged_df):
@@ -156,7 +153,6 @@ def get_campaign_tactic_heatmap_data(merged_df):
         
         # Calculate PRECISE base performance metrics per platform
         platform_performance = {}
-        
         for platform, df in [('Facebook', facebook_df), ('Google', google_df), ('TikTok', tiktok_df)]:
             total_spend = df['spend'].sum()
             total_clicks = df['clicks'].sum() if 'clicks' in df.columns else total_spend * 0.05
@@ -185,7 +181,6 @@ def get_campaign_tactic_heatmap_data(merged_df):
         
         # Adjust based on PRECISE actual performance data
         heatmap_data = []
-        
         for tactic in campaign_tactics:
             for platform in ['Facebook', 'Google', 'TikTok']:
                 base_score = tactic_performance_matrix[tactic][platform]
@@ -206,7 +201,6 @@ def get_campaign_tactic_heatmap_data(merged_df):
                 })
         
         return pd.DataFrame(heatmap_data)
-        
     except Exception as e:
         st.error(f"Error calculating tactic heatmap data: {e}")
         return None
@@ -241,7 +235,7 @@ def get_conversion_funnel_data(merged_df):
                 spend = platform_data['spend'].iloc[0]
             else:
                 orders = clicks * 0.02  # 2% conversion rate
-                revenue = orders * 50   # $50 average order value
+                revenue = orders * 50  # $50 average order value
                 spend = df['spend'].sum()
             
             # Calculate PRECISE mathematical conversion rates
@@ -282,7 +276,6 @@ def get_conversion_funnel_data(merged_df):
                 })
         
         return pd.DataFrame(funnel_data)
-        
     except Exception as e:
         st.error(f"Error calculating funnel data: {e}")
         return None
@@ -323,7 +316,6 @@ def get_engagement_metrics_data(merged_df):
             })
         
         return pd.DataFrame(engagement_data)
-        
     except Exception as e:
         st.error(f"Error calculating engagement metrics data: {e}")
         return None
@@ -355,7 +347,6 @@ def get_cac_clv_data(merged_df):
         platform_data['customer_volume'] = platform_data['new_customers']
         
         return platform_data[['platform', 'cac', 'estimated_clv', 'customer_volume', 'new_customers']]
-        
     except Exception as e:
         st.error(f"Error calculating CAC/CLV data: {e}")
         return None
@@ -413,7 +404,6 @@ def get_gross_profit_attribution_data(merged_df):
         })
         
         return pd.DataFrame(waterfall_data)
-        
     except Exception as e:
         st.error(f"Error calculating gross profit attribution: {e}")
         return None
@@ -449,7 +439,6 @@ def get_efficiency_metrics_data(merged_df):
         efficiency_data = efficiency_data.sort_values('date')
         
         return efficiency_data
-        
     except Exception as e:
         st.error(f"Error calculating weekly efficiency metrics: {e}")
         return None
