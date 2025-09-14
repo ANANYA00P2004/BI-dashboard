@@ -3,6 +3,64 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import config
 
+def create_revenue_by_platform_chart(merged_df):
+    """Create Revenue by Platform Bar Chart"""
+    from utils.data_loader import get_revenue_by_platform_data
+    
+    revenue_data = get_revenue_by_platform_data(merged_df)
+    
+    if revenue_data is None or len(revenue_data) == 0:
+        return None
+    
+    fig = px.bar(
+        revenue_data,
+        x='platform',
+        y='total_revenue',
+        title='Revenue by Platform',
+        color='platform',
+        color_discrete_map=config.PLATFORM_COLORS
+    )
+    
+    # Clean hover template with white background
+    fig.update_traces(
+        texttemplate='$%{y:,.0f}', 
+        textposition='outside',
+        textfont_size=11,
+        hovertemplate='<b>💰 %{x} Platform</b><br>' +
+                     'Total Revenue: $%{y:,.0f}<br>' +
+                     'Platform: %{x}<br>' +
+                     'Platform revenue comparison<extra></extra>'
+    )
+    
+    fig.update_layout(
+        xaxis_title="Platform",
+        yaxis_title="Total Revenue ($)",
+        showlegend=False,
+        height=260,
+        title_x=0.5,
+        xaxis=dict(
+            tickfont=dict(size=10)
+        ),
+        yaxis=dict(
+            tickformat='$,.0f',
+            showgrid=True,
+            gridwidth=1,
+            gridcolor='rgba(128,128,128,0.2)',
+            tickfont=dict(size=10)
+        ),
+        title_font=dict(size=12),
+        # White background hover
+        hoverlabel=dict(
+            bgcolor="white",
+            bordercolor="black",
+            font_size=12,
+            font_family="Arial",
+            font_color="black"
+        )
+    )
+    
+    return fig
+
 def create_campaign_tactic_heatmap(merged_df):
     """Create Campaign Tactic Effectiveness Matrix Heatmap - FIXED TITLE SPACING"""
     from utils.data_loader import get_campaign_tactic_heatmap_data
@@ -26,7 +84,7 @@ def create_campaign_tactic_heatmap(merged_df):
         textfont={"size": 11, "color": "black"},
         hovertemplate='<b>%{y}</b> on <b>%{x}</b><br>' + 
                      'Performance Score: <b>%{z:.0f}/100</b><br>' + 
-                     '<i>Higher score = Better performance</i><extra></extra>',
+                     'Higher score = Better performance<extra></extra>',
         colorbar=dict(
             title=dict(text="Performance<br>Score", font=dict(size=10)),
             tickfont=dict(size=9)
@@ -37,8 +95,8 @@ def create_campaign_tactic_heatmap(merged_df):
         title='Campaign Tactic Effectiveness Matrix',
         title_x=0.5,
         title_y=0.98,  # FIXED: Position title at very top
-        height=350,    # FIXED: Reduced height to accommodate title
-        margin=dict(t=100, b=10, l=60, r=80),  # FIXED: Proper margins
+        height=320,    # FIXED: Reduced height to accommodate title
+        margin=dict(t=70, b=10, l=60, r=80),  # FIXED: Proper margins
         xaxis_title="Campaign Tactics",
         yaxis_title="Platforms",
         xaxis=dict(
@@ -50,7 +108,14 @@ def create_campaign_tactic_heatmap(merged_df):
             tickfont=dict(size=10),
             title_standoff=20  # FIXED: Add space between axis and title
         ),
-        title_font=dict(size=14)  # FIXED: Smaller title font
+        title_font=dict(size=14),  # FIXED: Smaller title font
+        hoverlabel=dict(
+            bgcolor="white",
+            bordercolor="black",
+            font_size=12,
+            font_family="Arial",
+            font_color="black"
+        )
     )
     
     return fig
@@ -105,7 +170,7 @@ def create_conversion_funnel_chart(merged_df):
                     else:
                         hover_customdata.append([value, f"{conversion_rate:.2f}%", stage, platform])
         
-        # Create funnel chart with COMPLETE enhanced hover template
+        # Create funnel chart with clean hover template
         fig.add_trace(go.Funnel(
             y=funnel_labels,
             x=funnel_values,
@@ -116,16 +181,13 @@ def create_conversion_funnel_chart(merged_df):
             ),
             textinfo="value+percent initial",
             textfont=dict(size=10, color='white'),
-            # COMPLETE ENHANCED HOVER TEMPLATE WITH HTML FORMATTING
-            hovertemplate='<b style="font-size: 14px; color: #FFD700;">🎯 %{fullData.name} Platform</b><br>' +
-                         '<hr style="border: 1px solid #FFD700; margin: 5px 0;">' +
-                         '<b style="color: #87CEEB;">📊 Stage:</b> <span style="color: white;">%{customdata[2]}</span><br>' +
-                         '<b style="color: #87CEEB;">📈 Volume:</b> <span style="color: #90EE90; font-size: 13px;">%{customdata[0]:,.0f}</span><br>' +
-                         '<b style="color: #87CEEB;">🎯 Rate:</b> <span style="color: #FFB6C1;">%{customdata[1]}</span><br>' +
-                         '<b style="color: #87CEEB;">💡 Performance:</b> <span style="color: #F0E68C;">%{percent}</span><br>' +
-                         '<hr style="border: 1px solid #FFD700; margin: 5px 0;">' +
-                         '<i style="color: #DDA0DD; font-size: 11px;">🔍 Analyze conversion bottlenecks</i>' +
-                         '<extra></extra>',
+            # Clean hover template
+            hovertemplate='<b>🎯 %{fullData.name} Platform</b><br>' +
+                         'Stage: %{customdata[2]}<br>' +
+                         'Volume: %{customdata[0]:,.0f}<br>' +
+                         'Rate: %{customdata[1]}<br>' +
+                         'Performance: %{percent}<br>' +
+                         'Analyze conversion bottlenecks<extra></extra>',
             customdata=hover_customdata,
             orientation='v'
         ))
@@ -133,9 +195,9 @@ def create_conversion_funnel_chart(merged_df):
     fig.update_layout(
         title='Marketing Funnel Performance by Platform',
         title_x=0.5,
-        height=450,
-        margin=dict(t=20, b=10, l=20, r=20),  # Add this line - increased top margin
-        title_y=0.95,  # Add this line - position title lower
+        height=320,
+        margin=dict(t=70, b=10, l=20, r=20),  # Adjusted margins
+        title_y=0.95,  # Position title lower
         showlegend=True,
         legend=dict(
             orientation="h",
@@ -146,17 +208,214 @@ def create_conversion_funnel_chart(merged_df):
             font=dict(size=10)
         ),
         font=dict(size=11),
-        # Enhanced hover interaction
+        # White background hover
         hoverlabel=dict(
-            bgcolor="rgba(0,0,0,0.8)",
-            bordercolor="rgba(255,215,0,0.8)",
+            bgcolor="white",
+            bordercolor="black",
             font_size=12,
-            font_family="Arial"
+            font_family="Arial",
+            font_color="black"
         )
     )
     
     return fig
 
+def create_platform_revenue_pie_chart(merged_df):
+    """Create Platform Revenue Distribution Pie Chart with ROAS context"""
+    from utils.data_loader import get_revenue_by_platform_data, get_roas_by_platform_data
+    
+    revenue_data = get_revenue_by_platform_data(merged_df)
+    roas_data = get_roas_by_platform_data(merged_df)
+    
+    if revenue_data is None or len(revenue_data) == 0:
+        return None
+    
+    # Merge revenue and ROAS data
+    combined_data = revenue_data.merge(roas_data[['platform', 'roas', 'total_spend']], on='platform', how='left')
+    
+    # Calculate percentages
+    total_revenue = combined_data['total_revenue'].sum()
+    combined_data['percentage'] = (combined_data['total_revenue'] / total_revenue * 100)
+    
+    fig = px.pie(
+        combined_data,
+        values='total_revenue',
+        names='platform',
+        title='Platform Revenue Distribution and ROAS Performance',
+        color='platform',
+        color_discrete_map=config.PLATFORM_COLORS
+    )
+    
+    # Clean hover template
+    fig.update_traces(
+        textposition='inside',
+        textinfo='percent+label',
+        textfont_size=12,
+        hovertemplate='<b>💰 %{label} Platform</b><br>' +
+                     'Revenue: $%{value:,.0f}<br>' +
+                     'Share: %{percent}<br>' +
+                     'ROAS: %{customdata[0]:.2f}x<br>' +
+                     'Ad Spend: $%{customdata[1]:,.0f}<br>' +
+                     'Revenue efficiency analysis<extra></extra>',
+        customdata=list(zip(combined_data['roas'].fillna(0), combined_data['total_spend'].fillna(0)))
+    )
+    
+    fig.update_layout(
+        title_x=0.5,
+        height=320,
+        margin=dict(t=70, b=10, l=20, r=20),
+        title_font=dict(size=14),
+        font=dict(size=11),
+        showlegend=True,
+        legend=dict(
+            orientation="v",
+            yanchor="middle",
+            y=0.5,
+            xanchor="left",
+            x=1.02,
+            font=dict(size=10)
+        ),
+        # White background hover
+        hoverlabel=dict(
+            bgcolor="white",
+            bordercolor="black",
+            font_size=12,
+            font_family="Arial",
+            font_color="black"
+        )
+    )
+    
+    return fig
+
+def create_engagement_metrics_chart(merged_df):
+    """Create Reach and Engagement Metrics Comparison - Multiple Metrics Chart"""
+    from utils.data_loader import get_engagement_metrics_data
+    
+    engagement_data = get_engagement_metrics_data(merged_df)
+    
+    if engagement_data is None or len(engagement_data) == 0:
+        return None
+    
+    # Create subplots with secondary y-axis
+    fig = make_subplots(
+        specs=[[{"secondary_y": True}]]
+    )
+    
+    platforms = engagement_data['platform'].unique()
+    
+    # Colors for different metrics
+    impression_colors = {
+        'Facebook': '#1877F2',
+        'Google': '#4285F4', 
+        'TikTok': '#FF0050'
+    }
+    
+    click_colors = {
+        'Facebook': '#42A5F5',
+        'Google': '#66BB6A',
+        'TikTok': '#AB47BC'
+    }
+    
+    # Add Impressions bars (primary y-axis)
+    fig.add_trace(
+        go.Bar(
+            x=engagement_data['platform'],
+            y=engagement_data['total_impressions'],
+            name='Impressions',
+            marker_color=[impression_colors[p] for p in engagement_data['platform']],
+            yaxis='y',
+            offsetgroup=1,
+            hovertemplate='<b>👁️ %{x} Impressions</b><br>' +
+                         'Total Impressions: %{y:,.0f}<br>' +
+                         'Platform: %{x}<br>' +
+                         'Reach Metric: Primary KPI<br>' +
+                         'Total audience reached<extra></extra>'
+        ),
+        secondary_y=False
+    )
+    
+    # Add Clicks bars (primary y-axis, different offset)
+    fig.add_trace(
+        go.Bar(
+            x=engagement_data['platform'],
+            y=engagement_data['total_clicks'],
+            name='Clicks',
+            marker_color=[click_colors[p] for p in engagement_data['platform']],
+            yaxis='y',
+            offsetgroup=2,
+            hovertemplate='<b>👆 %{x} Clicks</b><br>' +
+                         'Total Clicks: %{y:,.0f}<br>' +
+                         'Platform: %{x}<br>' +
+                         'Engagement: Click Volume<br>' +
+                         'User interaction count<extra></extra>'
+        ),
+        secondary_y=False
+    )
+    
+    # Add CTR line (secondary y-axis)
+    fig.add_trace(
+        go.Scatter(
+            x=engagement_data['platform'],
+            y=engagement_data['ctr_percentage'],
+            mode='lines+markers',
+            name='CTR %',
+            line=dict(color='#FF6B35', width=4),
+            marker=dict(size=12, color='#FF6B35', symbol='diamond'),
+            yaxis='y2',
+            hovertemplate='<b>📈 %{x} CTR</b><br>' +
+                         'Click-Through Rate: %{y:.2f}%<br>' +
+                         'Platform: %{x}<br>' +
+                         'Efficiency: Engagement Rate<br>' +
+                         'Clicks per 100 impressions<extra></extra>'
+        ),
+        secondary_y=True
+    )
+    
+    # Update layout
+    fig.update_layout(
+        title='Reach and Engagement Metrics Comparison',
+        title_x=0.5,
+        height=320,
+        margin=dict(t=70, b=10, l=20, r=20),
+        title_font=dict(size=14),
+        xaxis_title="Platform",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="center",
+            x=0.5,
+            font=dict(size=10)
+        ),
+        hovermode='x unified',
+        # White background hover
+        hoverlabel=dict(
+            bgcolor="white",
+            bordercolor="black",
+            font_size=12,
+            font_family="Arial",
+            font_color="black"
+        )
+    )
+    
+    # Update y-axes
+    fig.update_yaxes(
+        title_text="Volume (Impressions & Clicks)",
+        secondary_y=False,
+        tickformat=',.0f',
+        showgrid=True,
+        gridwidth=1,
+        gridcolor='rgba(128,128,128,0.2)'
+    )
+    
+    fig.update_yaxes(
+        title_text="CTR Percentage (%)",
+        secondary_y=True,
+        tickformat='.2f',
+        showgrid=False
+    )
+    
+    return fig
 
 def create_cac_clv_scatter_chart(merged_df):
     """Create Customer Acquisition Cost vs Customer Lifetime Value Scatter Plot"""
@@ -178,13 +437,13 @@ def create_cac_clv_scatter_chart(merged_df):
         size_max=60
     )
     
-    # Enhanced hover template
+    # Clean hover template
     fig.update_traces(
         hovertemplate='<b>%{fullData.name}</b><br>' +
-                     'CAC: <b>$%{x:.2f}</b><br>' +
-                     'Estimated CLV: <b>$%{y:.2f}</b><br>' +
-                     'New Customers: <b>%{customdata:,.0f}</b><br>' +
-                     '<i>CLV should be 3x+ higher than CAC</i><extra></extra>',
+                     'CAC: $%{x:.2f}<br>' +
+                     'Estimated CLV: $%{y:.2f}<br>' +
+                     'New Customers: %{customdata:,.0f}<br>' +
+                     'CLV should be 3x+ higher than CAC<extra></extra>',
         customdata=cac_clv_data['new_customers']
     )
     
@@ -223,7 +482,15 @@ def create_cac_clv_scatter_chart(merged_df):
             x=1.02,
             font=dict(size=9)
         ),
-        margin=dict(r=100)
+        margin=dict(r=100),
+        # White background hover
+        hoverlabel=dict(
+            bgcolor="white",
+            bordercolor="black",
+            font_size=12,
+            font_family="Arial",
+            font_color="black"
+        )
     )
     
     return fig
@@ -276,8 +543,8 @@ def create_gross_profit_waterfall_chart(merged_df):
                 marker_color=bar_color,
                 showlegend=False,
                 hovertemplate='<b>%{x}</b><br>' +
-                             'Profit Contribution: <b>$%{y:,.0f}</b><br>' +
-                             '<i>After COGS and Ad Spend</i><extra></extra>'
+                             'Profit Contribution: $%{y:,.0f}<br>' +
+                             'After COGS and Ad Spend<extra></extra>'
             ))
         else:
             # Total bar
@@ -287,7 +554,7 @@ def create_gross_profit_waterfall_chart(merged_df):
                 name='Total',
                 marker_color=default_colors['total'],
                 showlegend=False,
-                hovertemplate='<b>Total Gross Profit</b><br>Value: <b>$%{y:,.0f}</b><extra></extra>'
+                hovertemplate='<b>Total Gross Profit</b><br>Value: $%{y:,.0f}<extra></extra>'
             ))
     
     fig.update_layout(
@@ -308,7 +575,15 @@ def create_gross_profit_waterfall_chart(merged_df):
             tickfont=dict(size=10)
         ),
         plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)'
+        paper_bgcolor='rgba(0,0,0,0)',
+        # White background hover
+        hoverlabel=dict(
+            bgcolor="white",
+            bordercolor="black",
+            font_size=12,
+            font_family="Arial",
+            font_color="black"
+        )
     )
     
     return fig
@@ -335,16 +610,16 @@ def create_roas_comparison_chart(merged_df):
         color_discrete_map=config.PLATFORM_COLORS
     )
     
-    # Enhanced hover template with insights
+    # Clean hover template
     fig.update_traces(
         texttemplate='%{x:.2f}x', 
         textposition='outside',
         textfont_size=11,
         hovertemplate='<b>%{y} Platform</b><br>' +
-                     'ROAS: <b>%{x:.2f}x</b><br>' +
-                     'Revenue: <b>$%{customdata[0]:,.0f}</b><br>' +
-                     'Total Spend: <b>$%{customdata[1]:,.0f}</b><br>' +
-                     '<i>Higher ROAS = More Profitable</i><extra></extra>',
+                     'ROAS: %{x:.2f}x<br>' +
+                     'Revenue: $%{customdata[0]:,.0f}<br>' +
+                     'Total Spend: $%{customdata[1]:,.0f}<br>' +
+                     'Higher ROAS = More Profitable<extra></extra>',
         customdata=list(zip(roas_data['total_revenue'], roas_data['total_spend']))
     )
     
@@ -366,7 +641,15 @@ def create_roas_comparison_chart(merged_df):
         ),
         # Reduce bar thickness
         bargap=0.6,  # Increase gap between bars to make them thinner
-        margin=dict(l=80, r=50, t=60, b=50)  # Adjust margins
+        margin=dict(l=80, r=50, t=60, b=50),  # Adjust margins
+        # White background hover
+        hoverlabel=dict(
+            bgcolor="white",
+            bordercolor="black",
+            font_size=12,
+            font_family="Arial",
+            font_color="black"
+        )
     )
     
     return fig
@@ -425,7 +708,7 @@ def create_efficiency_trends_chart(merged_df):
                 '<b>%{fullData.name}</b><br>' +
                 'Week of: %{x}<br>' +
                 'Cost per Click: $%{y:.2f}<br>' +
-                f'<i>{platform} Weekly CPC Trend</i><extra></extra>',
+                f'{platform} Weekly CPC Trend<extra></extra>',
                 legendgroup=f'{platform}_CPC',
                 showlegend=True
             )
@@ -450,7 +733,7 @@ def create_efficiency_trends_chart(merged_df):
                 '<b>%{fullData.name}</b><br>' +
                 'Week of: %{x}<br>' +
                 'Cost per Acquisition: $%{y:.2f}<br>' +
-                f'<i>{platform} Weekly CPA Trend</i><extra></extra>',
+                f'{platform} Weekly CPA Trend<extra></extra>',
                 legendgroup=f'{platform}_CPA',
                 showlegend=True
             )
@@ -478,70 +761,38 @@ def create_efficiency_trends_chart(merged_df):
     
     # Update layout
     fig.update_layout(
-        title=dict(
-            text="Weekly Campaign Efficiency Trends",
-            x=0.5,
-            font=dict(size=16, color='#1565C0')
-        ),
-        height=500,
-        hovermode='x unified',
+        title='Weekly Campaign Efficiency Trends',
+        title_x=0.5,
+        height=320,
+        margin=dict(t=70, b=40, l=50, r=50),
+        title_font=dict(size=14),
         legend=dict(
-            orientation="v",
-            yanchor="top",
-            y=1,
-            xanchor="left",
-            x=1.02,
+            orientation="h",
+            yanchor="bottom",
+            y=-0.2,
+            xanchor="center",
+            x=0.5,
             font=dict(size=9)
         ),
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        font=dict(size=12),
-        margin=dict(r=120)
+        # White background hover
+        hoverlabel=dict(
+            bgcolor="white",
+            bordercolor="black",
+            font_size=12,
+            font_family="Arial",
+            font_color="black"
+        )
     )
     
     return fig
 
-def create_revenue_by_platform_chart(merged_df):
-    """Create Revenue by Platform Bar Chart with hover insights"""
-    from utils.data_loader import get_revenue_by_platform_data
-    
-    platform_revenue = get_revenue_by_platform_data(merged_df)
-    
-    if platform_revenue is None or len(platform_revenue) == 0:
-        return None
-    
-    # Calculate percentages for better insights
-    total_revenue = platform_revenue['total_revenue'].sum()
-    platform_revenue['percentage'] = (platform_revenue['total_revenue'] / total_revenue * 100)
-    
-    fig = px.bar(
-        platform_revenue,
-        x='platform',
-        y='total_revenue',
-        title='Total Revenue by Marketing Platform',
-        color='platform',
-        color_discrete_map=config.PLATFORM_COLORS
-    )
-    
-    # Enhanced hover template with percentage
-    fig.update_traces(
-        texttemplate='$%{y:,.0f}', 
-        textposition='outside',
-        textfont_size=11,
-        hovertemplate='<b>%{x} Platform</b><br>' +
-                     'Revenue: <b>$%{y:,.0f}</b><br>' +
-                     'Share: <b>%{customdata:.1f}%</b><br>' +
-                     '<i>Hover to compare performance</i><extra></extra>',
-        customdata=platform_revenue['percentage']
-    )
-    
-    fig.update_layout(
-        xaxis_title="Platform",
-        yaxis_title="Total Revenue ($)",
-        showlegend=False,
-        height=500,
-        title_x=0.5,
-        yaxis=dict(tickformat='$,.0f')
-    )
-    
-    return fig
+# Alternative function names for compatibility
+def create_platform_performance_pie_chart(merged_df):
+    """Alternative name for the pie chart - ensuring compatibility"""
+    return create_platform_revenue_pie_chart(merged_df)
+
+def create_engagement_performance_chart(merged_df):
+    """Alternative name for engagement chart - ensuring compatibility"""
+    return create_engagement_metrics_chart(merged_df)

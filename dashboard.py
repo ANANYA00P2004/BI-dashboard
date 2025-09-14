@@ -4,7 +4,8 @@ from utils.data_loader import load_campaign_data, load_business_data, merge_camp
 from utils.chart_functions import (create_revenue_by_platform_chart, create_efficiency_trends_chart, 
                                   create_roas_comparison_chart, create_cac_clv_scatter_chart, 
                                   create_gross_profit_waterfall_chart, create_campaign_tactic_heatmap,
-                                  create_conversion_funnel_chart)
+                                  create_conversion_funnel_chart, create_platform_revenue_pie_chart,
+                                  create_engagement_metrics_chart)
 import config
 
 # Page configuration
@@ -141,6 +142,32 @@ st.markdown("""
     /* Remove any extra spacing from columns */
     .stColumn > div {
         padding: 0 !important;
+    }
+    
+    /* Advanced chart section styling */
+    .advanced-section-divider {
+        background: linear-gradient(90deg, #1565C0, #42A5F5, #1565C0);
+        height: 2px;
+        margin: 15px 0 10px 0;
+        border-radius: 1px;
+    }
+    
+    .chart-subsection {
+        background-color: #FAFAFA;
+        border-radius: 8px;
+        padding: 8px;
+        margin: 4px 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        border-left: 3px solid #1565C0;
+    }
+    
+    .subsection-title {
+        color: #1565C0;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        text-align: center;
+        padding: 2px 0;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -311,46 +338,76 @@ def main():
     with info_col3:
         st.markdown('<div class="info-box-compact" style="color: #1565C0;">📊 Weekly trends & profit</div>', unsafe_allow_html=True)
 
-    # SECTION: Additional Analytics (Ultra-compact and Scrollable)
+    # SECTION: Advanced Campaign Analysis - UPDATED WITH 4 CHARTS
+    st.markdown('<div class="advanced-section-divider"></div>', unsafe_allow_html=True)
     st.markdown('<div class="section-header">Advanced Campaign Analysis</div>', unsafe_allow_html=True)
     
-    # Two additional charts with ultra-minimal spacing
-    advanced_col1, advanced_col2 = st.columns([0.45, 0.55], gap="small")
+    # Row 1: Pie Chart and Engagement Metrics (New Charts)
+    advanced_row1_col1, advanced_row1_col2 = st.columns([0.45, 0.55], gap="small")
     
-    with advanced_col1:
-        st.markdown('<div style="border-right: 1px solid #1565C0; padding-right: 8px;">', unsafe_allow_html=True)
-        st.markdown('<div style="font-size: 14px; font-weight: 600; color: #1565C0; margin-bottom: 10px;">🎯 Campaign Tactic Analysis</div>', unsafe_allow_html=True)
+    with advanced_row1_col1:
+        st.markdown('<div class="chart-subsection">', unsafe_allow_html=True)
+        st.markdown('<div class="subsection-title">🥧 Platform Revenue Distribution</div>', unsafe_allow_html=True)
+        
+        pie_chart = create_platform_revenue_pie_chart(merged_df)
+        if pie_chart:
+            pie_chart.update_layout(height=320, margin=dict(t=50, b=15, l=15, r=60))
+            st.plotly_chart(pie_chart, use_container_width=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with advanced_row1_col2:
+        st.markdown('<div class="chart-subsection">', unsafe_allow_html=True)
+        st.markdown('<div class="subsection-title">📊 Reach and Engagement Performance</div>', unsafe_allow_html=True)
+        
+        engagement_chart = create_engagement_metrics_chart(merged_df)
+        if engagement_chart:
+            engagement_chart.update_layout(height=320, margin=dict(t=50, b=15, l=15, r=15))
+            st.plotly_chart(engagement_chart, use_container_width=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Row 2: Heatmap and Funnel (Existing Charts)  
+    advanced_row2_col1, advanced_row2_col2 = st.columns([0.45, 0.55], gap="small")
+    
+    with advanced_row2_col1:
+        st.markdown('<div class="chart-subsection">', unsafe_allow_html=True)
+        st.markdown('<div class="subsection-title">🎯 Campaign Tactic Analysis</div>', unsafe_allow_html=True)
         
         tactic_chart = create_campaign_tactic_heatmap(merged_df)
         if tactic_chart:
-            tactic_chart.update_layout(height=320, margin=dict(t=15, b=15, l=15, r=15))
+            tactic_chart.update_layout(height=320, margin=dict(t=50, b=15, l=15, r=60))
             st.plotly_chart(tactic_chart, use_container_width=True)
         
         st.markdown('</div>', unsafe_allow_html=True)
     
-    with advanced_col2:
-        st.markdown('<div style="padding-left: 8px;">', unsafe_allow_html=True)
-        st.markdown('<div style="font-size: 14px; font-weight: 600; color: #1565C0; margin-bottom: 5px;">📈 Conversion Funnel Analysis</div>', unsafe_allow_html=True)
+    with advanced_row2_col2:
+        st.markdown('<div class="chart-subsection">', unsafe_allow_html=True)
+        st.markdown('<div class="subsection-title">📈 Conversion Funnel Analysis</div>', unsafe_allow_html=True)
         
         funnel_chart = create_conversion_funnel_chart(merged_df)
         if funnel_chart:
-            funnel_chart.update_layout(height=320, margin=dict(t=15, b=15, l=15, r=15))
+            funnel_chart.update_layout(height=320, margin=dict(t=50, b=15, l=15, r=15))
             st.plotly_chart(funnel_chart, use_container_width=True)
         
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # Ultra-compact final message
+    # Ultra-compact final message with enhanced styling
     st.markdown("""
     <div style="
         background: linear-gradient(135deg, #E3F2FD, #F3E5F5);
-        border-radius: 6px;
-        padding: 8px;
-        margin: 8px 0;
+        border-radius: 8px;
+        padding: 12px;
+        margin: 12px 0;
         text-align: center;
         border: 1px solid #BBDEFB;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
     ">
-        <span style="color: #1565C0; font-size: 12px; font-weight: 500;">
-        📊 Complete Marketing Intelligence Dashboard
+        <span style="color: #1565C0; font-size: 14px; font-weight: 600;">
+        📊 Complete Marketing Intelligence Dashboard - 9 Interactive Charts
+        </span><br>
+        <span style="color: #666; font-size: 11px; margin-top: 4px; display: inline-block;">
+        Revenue Analysis • Customer Acquisition • Campaign Efficiency • Conversion Funnels
         </span>
     </div>
     """, unsafe_allow_html=True)
